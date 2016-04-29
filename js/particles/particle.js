@@ -12,12 +12,17 @@ app.Particle = function(position, color, i) {
     this.t = 0;
     this.timeToFinish = 0;
     this.state = 0;
+    this.finalPos = new THREE.Vector3(0, 0, 0);
 };
 
 app.Particle.prototype.setToMoveWithAcceleration = function(a, p, t) {
     this.p0.x = this.position.x;
     this.p0.y = this.position.y;
     this.p0.z = this.position.z;
+
+    this.finalPos.x = p.x;
+    this.finalPos.y = p.y;
+    this.finalPos.z = p.z;
 
     this.v0.x = (p.x - this.position.x - (1/2)*a.x*t*t) / t;
     this.v0.y = (p.y - this.position.y - (1/2)*a.y*t*t) / t;
@@ -35,6 +40,10 @@ app.Particle.prototype.setToMoveWithVelocity = function(v, p, t) {
     this.p0.x = this.position.x;
     this.p0.y = this.position.y;
     this.p0.z = this.position.z;
+
+    this.finalPos.x = p.x;
+    this.finalPos.y = p.y;
+    this.finalPos.z = p.z;
 
     this.v0.x = v.x;
     this.v0.y = v.y;

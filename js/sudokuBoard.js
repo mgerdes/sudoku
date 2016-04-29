@@ -16,7 +16,7 @@ app.SudokuBoard = function(puzzle) {
 
     var TIME_TO_MOVE_PIECE = 2.0;
 
-    var LOG_ACTIONS_PER_SECOND = 5.0;
+    var ACTIONS_PER_SECOND = 1.0;
 
     var NUM_OF_PARTICLES_FOR_BOARD = 30000;
 
@@ -49,7 +49,7 @@ app.SudokuBoard = function(puzzle) {
             var col = Math.floor(i % 9); 
 
             var x = -5 + col * 10.0 / 9.0; 
-            var y = -5 + row * 10.0 / 9.0;
+            var y = 3.9 - row * 10.0 / 9.0;
 
             var box = new app.ParticleBox(x + 0.2, y + 0.2, 0.0, 10.0 / 9.0 - 0.4, 10.0 / 9.0 - 0.4, 0.5);
 
@@ -224,7 +224,6 @@ app.SudokuBoard = function(puzzle) {
 
             if (puzzle.getNumber(row, col)) {
                 for (var j = 0; j < NUM_OF_PARTICLES_FOR_BOX; j++) {
-
                     var ax = (Math.random() - 0.5);
                     var ay = (Math.random() - 0.5);
                     var az = 0.0 * (Math.random() - 0.5);
@@ -239,8 +238,24 @@ app.SudokuBoard = function(puzzle) {
         }
 
         if (currentTime > TIME_TO_SETTLE_IN_BOARD) {
+            currentTime = 0;
             state = STATES.SOLVE_THE_PUZZLE;
             new app.SudokuSolver(puzzle).solvePuzzle(log);
+
+            var row = log[0][1];
+            var col = log[0][2];
+            var i = row * 9 + col
+
+            for (var j = 0; j < NUM_OF_PARTICLES_FOR_BOX; j++) {
+                var ax = (Math.random() - 0.5);
+                var ay = (Math.random() - 0.5);
+                var az = 0.0 * (Math.random() - 0.5);
+
+                var a = new THREE.Vector3(ax, ay, az);
+                var p = boxesParticles[i][j].positionInBoardBox;
+
+                boxesParticles[i][j].setToMoveWithAcceleration(a, p, 1.0 / (1.0 * ACTIONS_PER_SECOND));
+            }
         }
 
         boarderPoints.geometry.verticesNeedUpdate = true;
@@ -260,7 +275,69 @@ app.SudokuBoard = function(puzzle) {
             boarderParticles[i].update(dt);
         }
 
+        var i = log[logStep][1] * 9 + log[logStep][2];
+
+        for (var j = 0; j < 81; j++) {
+            if (j == i) {
+                continue; 
+            }
+            for (var k = 0; k < NUM_OF_PARTICLES_FOR_BOX; k++) {
+                /*
+                var ax = (Math.random() - 0.5);
+                var ay = (Math.random() - 0.5);
+                var az = 0.0 * (Math.random() - 0.5);
+
+                var a = new THREE.Vector3(ax, ay, az);
+                var p = boxesParticles[j][k].positionInBoardBox;
+
+                boxesParticles[j][k].setToMoveWithAcceleration(a, p, 1.0);
+                boxesParticles[j][k].update(dt);
+                */
+            }
+        }
+
+        for (var j = 0; j < NUM_OF_PARTICLES_FOR_BOX; j++) {
+            boxesParticles[i][j].update(dt);
+        }
+
+        if (currentTime > 1.0 / ACTIONS_PER_SECOND) {
+            for (var j = 0; j < NUM_OF_PARTICLES_FOR_BOX; j++) {
+                var p = boxesParticles[i][j].finalPos;
+                boxesParticles[i][j].position.set(p.x, p.y, p.z);
+                boxesParticles[i][j].setNotMoving();
+            }
+
+            logStep++;
+            currentTime = 0;
+
+            var i = log[logStep][1] * 9 + log[logStep][2];
+
+            for (var j = 0; j < NUM_OF_PARTICLES_FOR_BOX; j++) {
+                if (log[logStep][0] == 0) {
+                    var ax = (Math.random() - 0.5);
+                    var ay = (Math.random() - 0.5);
+                    var az = 0.0 * (Math.random() - 0.5);
+
+                    var a = new THREE.Vector3(ax, ay, az);
+                    var p = boxesParticles[i][j].positionInBoardBox;
+
+                    boxesParticles[i][j].setToMoveWithAcceleration(a, p, 1.0 / (1.0 * ACTIONS_PER_SECOND));
+                }
+                else if (log[logStep][0] == 1) {
+                    var ax = (Math.random() - 0.5);
+                    var ay = (Math.random() - 0.5);
+                    var az = 0.0 * (Math.random() - 0.5);
+
+                    var a = new THREE.Vector3(ax, ay, az);
+                    var p = new THREE.Vector3(0.0, 0.0, 0.0);
+
+                    boxesParticles[i][j].setToMoveWithAcceleration(a, p, 1.0 / (1.0 * ACTIONS_PER_SECOND));
+                }
+            }
+        }
+
         boarderPoints.geometry.verticesNeedUpdate = true;
+        boxesPoints.geometry.verticesNeedUpdate = true;
     };
 
     /*
