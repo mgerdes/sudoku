@@ -29,7 +29,6 @@ app.init = function() {
 
     document.onkeydown = function (event) {
         if (event.keyCode == 37) {
-            console.log("HI");
             // left
             app.camera.position.x += 0.1; 
             app.camera.lookAt(new THREE.Vector3(0.0, 0.0, 0.0));
@@ -115,4 +114,3 @@ puzzle.makeMove(8,8,9);
 
 var solver = new app.SudokuSolver(puzzle);
 solver.solvePuzzle();
-puzzle.printBoard();

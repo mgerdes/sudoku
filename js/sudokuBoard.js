@@ -12,6 +12,8 @@ app.SudokuBoard = function() {
 
     var TIME_TO_SET_UP_BOARD = 2.0;
 
+    var TIME_TO_MOVE_PIECE = 2.0;
+
     var NUM_OF_PARTICLES_FOR_BOARD = 60000;
 
     var NUM_OF_PARTICLES_FOR_BOX = 1000;
@@ -137,9 +139,9 @@ app.SudokuBoard = function() {
      */
     var updateStartState = function(dt) {
         for (var i = 0; i < NUM_OF_PARTICLES_FOR_BOARD; i++) {
-            var ax = 10 * (Math.random() - 0.5);
-            var ay = 10 * (Math.random() - 0.5);
-            var az = 10 * (Math.random() - 0.5);
+            var ax = 10.0 * (Math.random() - 0.5); 
+            var ay = 10.0 * (Math.random() - 0.5); 
+            var az = 10.0 * (Math.random() - 0.5); 
 
             var a = new THREE.Vector3(ax, ay, az);
             var p = boarderParticles[i].positionInBoardBox;
@@ -153,27 +155,40 @@ app.SudokuBoard = function() {
 
     var updateSetUpBoardState = function(dt) {
         for (var i = 0; i < NUM_OF_PARTICLES_FOR_BOARD; i++) {
-            if (currentTime <= TIME_TO_SET_UP_BOARD) {
-                boarderParticles[i].update(dt);
-            }
-            else {
-                var p = boarderParticles[i].positionInBoardBox;
-                boarderParticles[i].position.set(p.x, p.y, p.z);
-            }
-        }
-        boarderPoints.geometry.verticesNeedUpdate = true;
+            var v = boarderParticles[i].getCurrentVelocity();
+            var p = boarderParticles[i].positionInBoardBox;
 
-        if (currentTime > TIME_TO_SET_UP_BOARD) {
-            state = STATES.WAIT_FOR_INPUT;    
-            currentTime = 0;
+            // Lol hack to get particles to move slower towards end
+            boarderParticles[i].setToMoveWithVelocity(v, p, 1.0);
+
+            boarderParticles[i].update(dt);
         }
+
+        if (currentTime > TIME_TO_SET_UP_BOARD + 1.2) {
+            state = STATES.WAIT_FOR_INPUT;
+
+            for (var i = 0; i < 81; i++) {
+                for (var j = 0; j < NUM_OF_PARTICLES_FOR_BOX; j++) {
+                    var ax = (Math.random() - 0.5);
+                    var ay = (Math.random() - 0.5);
+                    var az = (Math.random() - 0.5);
+
+                    var a = new THREE.Vector3(ax, ay, az);
+                    var p = boxesParticles[i][j].positionInBoardBox;
+
+                    boxesParticles[i][j].setToMoveWithAcceleration(a, p, TIME_TO_MOVE_PIECE);
+                }
+            }
+        }
+
+        boarderPoints.geometry.verticesNeedUpdate = true;
     };
 
     var updateWaitForInputState = function(dt) {
         for (var i = 0; i < NUM_OF_PARTICLES_FOR_BOARD; i++) {
             var ax = (Math.random() - 0.5);
             var ay = (Math.random() - 0.5);
-            var az = (Math.random() - 0.5);
+            var az = 0.0 * (Math.random() - 0.5);
 
             var a = new THREE.Vector3(ax, ay, az);
             var p = boarderParticles[i].positionInBoardBox;
@@ -184,15 +199,14 @@ app.SudokuBoard = function() {
 
         for (var i = 0; i < 81; i++) {
             for (var j = 0; j < NUM_OF_PARTICLES_FOR_BOX; j++) {
-                var ax = (Math.random() - 0.5);
-                var ay = (Math.random() - 0.5);
-                var az = (Math.random() - 0.5);
+                if (boxesParticles[i][j].t > boxesParticles[i][j].timeToFinish - 0.5) {
+                    var v = boxesParticles[i][j].getCurrentVelocity();
+                    var p = boxesParticles[i][j].positionInBoardBox;
 
-                var a = new THREE.Vector3(ax, ay, az);
-                var p = boxesParticles[i][j].positionInBoardBox;
-
-                boxesParticles[i][j].setToMoveWithAcceleration(a, p, 1.0);
-                boxesParticles[i][j].update(dt);
+                    // Lol hack to get particles to move slower towards end
+                    boxesParticles[i][j].setToMoveWithVelocity(v, p, 1.0);
+                }
+                boxesParticles[i][j].update(dt); 
             }
         }
 
