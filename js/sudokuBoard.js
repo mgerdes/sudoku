@@ -1,22 +1,26 @@
 var app = app || { };
 
-app.SudokuBoard = function() {
+app.SudokuBoard = function(puzzle) {
     /*
      * Constants
      */ 
     var STATES = {
         START: 0,
         SET_UP_BOARD: 1,
-        WAIT_FOR_INPUT: 2
+        SETTLE_IN_BOARD: 2
     };
 
     var TIME_TO_SET_UP_BOARD = 2.0;
 
+    var TIME_TO_SETTLE_IN_BOARD = 5.0;
+
     var TIME_TO_MOVE_PIECE = 2.0;
 
-    var NUM_OF_PARTICLES_FOR_BOARD = 60000;
+    var LOG_ACTIONS_PER_SECOND = 5.0;
 
-    var NUM_OF_PARTICLES_FOR_BOX = 1000;
+    var NUM_OF_PARTICLES_FOR_BOARD = 30000;
+
+    var NUM_OF_PARTICLES_FOR_BOX = 500;
 
     /*
      * Init State
@@ -25,15 +29,10 @@ app.SudokuBoard = function() {
     var currentTime = 0;
 
     /*
-     * Board Array
+     * Log Of Steps To Solve Puzzle
      */
-    var board = new Array(9);
-    for (var row = 0; row < 9; row++) {
-        board[row] = new Array(9);
-        for (var col = 0; col < 9; col++) {
-            board[row][col] = null;
-        }
-    }
+    var log = [];
+    var logStep = 0;
 
     /*
      * Init Boxes Particles
@@ -149,6 +148,24 @@ app.SudokuBoard = function() {
             boarderParticles[i].setToMoveWithAcceleration(a, p, TIME_TO_SET_UP_BOARD);
         }
 
+        for (var i = 0; i < 81; i++) {
+            var row = Math.floor(i / 9);
+            var col = Math.floor(i % 9); 
+
+            if (puzzle.getNumber(row, col)) {
+                for (var j = 0; j < NUM_OF_PARTICLES_FOR_BOX; j++) {
+                    var ax = 10.0 * (Math.random() - 0.5);
+                    var ay = 10.0 * (Math.random() - 0.5);
+                    var az = 10.0 * (Math.random() - 0.5);
+
+                    var a = new THREE.Vector3(ax, ay, az);
+                    var p = boxesParticles[i][j].positionInBoardBox;
+
+                    boxesParticles[i][j].setToMoveWithAcceleration(a, p, TIME_TO_SET_UP_BOARD);
+                }
+            }
+        }
+
         state = STATES.SET_UP_BOARD;
         currentTime = 0;
     };
@@ -164,27 +181,31 @@ app.SudokuBoard = function() {
             boarderParticles[i].update(dt);
         }
 
-        if (currentTime > TIME_TO_SET_UP_BOARD + 1.2) {
-            state = STATES.WAIT_FOR_INPUT;
+        for (var i = 0; i < 81; i++) {
+            var row = Math.floor(i / 9);
+            var col = Math.floor(i % 9); 
 
-            for (var i = 0; i < 81; i++) {
+            if (puzzle.getNumber(row, col)) {
                 for (var j = 0; j < NUM_OF_PARTICLES_FOR_BOX; j++) {
-                    var ax = (Math.random() - 0.5);
-                    var ay = (Math.random() - 0.5);
-                    var az = (Math.random() - 0.5);
+                    var v = boxesParticles[i][j].getCurrentVelocity();
+                    var p = boxesParticles[i][j].positionInBoardBox
 
-                    var a = new THREE.Vector3(ax, ay, az);
-                    var p = boxesParticles[i][j].positionInBoardBox;
+                    boxesParticles[i][j].setToMoveWithVelocity(v, p, 1.0);
 
-                    boxesParticles[i][j].setToMoveWithAcceleration(a, p, TIME_TO_MOVE_PIECE);
+                    boxesParticles[i][j].update(dt);
                 }
             }
         }
 
+        if (currentTime > TIME_TO_SET_UP_BOARD + 1.2) {
+            state = STATES.SETTLE_IN_BOARD;
+        }
+
         boarderPoints.geometry.verticesNeedUpdate = true;
+        boxesPoints.geometry.verticesNeedUpdate = true;
     };
 
-    var updateWaitForInputState = function(dt) {
+    var updateSettleInBoardState = function(dt) {
         for (var i = 0; i < NUM_OF_PARTICLES_FOR_BOARD; i++) {
             var ax = (Math.random() - 0.5);
             var ay = (Math.random() - 0.5);
@@ -198,20 +219,48 @@ app.SudokuBoard = function() {
         }
 
         for (var i = 0; i < 81; i++) {
-            for (var j = 0; j < NUM_OF_PARTICLES_FOR_BOX; j++) {
-                if (boxesParticles[i][j].t > boxesParticles[i][j].timeToFinish - 0.5) {
-                    var v = boxesParticles[i][j].getCurrentVelocity();
+            var row = Math.floor(i / 9);
+            var col = Math.floor(i % 9); 
+
+            if (puzzle.getNumber(row, col)) {
+                for (var j = 0; j < NUM_OF_PARTICLES_FOR_BOX; j++) {
+
+                    var ax = (Math.random() - 0.5);
+                    var ay = (Math.random() - 0.5);
+                    var az = 0.0 * (Math.random() - 0.5);
+
+                    var a = new THREE.Vector3(ax, ay, az);
                     var p = boxesParticles[i][j].positionInBoardBox;
 
-                    // Lol hack to get particles to move slower towards end
-                    boxesParticles[i][j].setToMoveWithVelocity(v, p, 1.0);
+                    boxesParticles[i][j].setToMoveWithAcceleration(a, p, 1.0);
+                    boxesParticles[i][j].update(dt);
                 }
-                boxesParticles[i][j].update(dt); 
             }
+        }
+
+        if (currentTime > TIME_TO_SETTLE_IN_BOARD) {
+            state = STATES.SOLVE_THE_PUZZLE;
+            new app.SudokuSolver(puzzle).solvePuzzle(log);
         }
 
         boarderPoints.geometry.verticesNeedUpdate = true;
         boxesPoints.geometry.verticesNeedUpdate = true;
+    };
+
+    var updateSolveThePuzzleState = function(dt) {
+        for (var i = 0; i < NUM_OF_PARTICLES_FOR_BOARD; i++) {
+            var ax = (Math.random() - 0.5);
+            var ay = (Math.random() - 0.5);
+            var az = 0.0 * (Math.random() - 0.5);
+
+            var a = new THREE.Vector3(ax, ay, az);
+            var p = boarderParticles[i].positionInBoardBox;
+
+            boarderParticles[i].setToMoveWithAcceleration(a, p, 1.0);
+            boarderParticles[i].update(dt);
+        }
+
+        boarderPoints.geometry.verticesNeedUpdate = true;
     };
 
     /*
@@ -226,8 +275,11 @@ app.SudokuBoard = function() {
         else if (state == STATES.SET_UP_BOARD) {
             updateSetUpBoardState(dt);
         }
-        else if (state == STATES.WAIT_FOR_INPUT) {
-            updateWaitForInputState(dt);       
+        else if (state == STATES.SETTLE_IN_BOARD) {
+            updateSettleInBoardState(dt);       
+        }
+        else if (state == STATES.SOLVE_THE_PUZZLE) {
+            updateSolveThePuzzleState(dt);
         }
     };
 };
