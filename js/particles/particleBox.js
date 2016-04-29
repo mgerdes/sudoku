@@ -9,12 +9,12 @@ app.ParticleBox = function(x, y, z, width, height, depth) {
     this.depth = depth;
 };
 
-app.ParticleBox.prototype.randomPointOnSurface = function() {
+app.ParticleBox.prototype.randomPointOnSurface = function(numSides) {
     var x = this.x + Math.random() * this.width;
     var y = this.y + Math.random() * this.height;
     var z = this.z + Math.random() * this.depth;
 
-    var boxSide = Math.floor(Math.random() * 4);
+    var boxSide = Math.floor(Math.random() * numSides);
 
     if (boxSide == 0) {
         x = this.x; 

@@ -26,7 +26,33 @@ app.init = function() {
     app.initCamera();
     app.initScene();
     app.initSudokuBoard();
+
+    document.onkeydown = function (event) {
+        if (event.keyCode == 37) {
+            console.log("HI");
+            // left
+            app.camera.position.x += 0.1; 
+            app.camera.lookAt(new THREE.Vector3(0.0, 0.0, 0.0));
+        }
+        else if (event.keyCode == 38) {
+            // up 
+            app.camera.position.y += 0.1; 
+            app.camera.lookAt(new THREE.Vector3(0.0, 0.0, 0.0));
+        }
+        else if (event.keyCode == 39) {
+            // right
+            app.camera.position.x -= 0.1; 
+            app.camera.lookAt(new THREE.Vector3(0.0, 0.0, 0.0));
+        }
+        else if (event.keyCode == 40) {
+            // down
+            app.camera.position.y -= 0.1; 
+            app.camera.lookAt(new THREE.Vector3(0.0, 0.0, 0.0));
+        }
+    };
 };
+
+app.lastTime = Date.now();
 
 app.update = function(dt) {
     app.sudokuBoard.update(dt);
@@ -34,7 +60,11 @@ app.update = function(dt) {
 
 app.render = function() {
     requestAnimationFrame(app.render);
-    app.update(1/60);
+
+    var dt = Date.now() - app.lastTime;
+    app.lastTime = Date.now();
+    app.update(dt / 1000.0);
+
     app.renderer.render(app.scene, app.camera);
 };
 
