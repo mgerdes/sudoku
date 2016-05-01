@@ -20,7 +20,7 @@ app.SudokuBoard = function(puzzle) {
 
     var NUM_OF_PARTICLES_FOR_BOARD = 30000;
 
-    var NUM_OF_PARTICLES_FOR_BOX = 500;
+    var NUM_OF_PARTICLES_FOR_BOX = 1000;
 
     /*
      * Init State
@@ -58,6 +58,19 @@ app.SudokuBoard = function(puzzle) {
 
                 boxesParticles[i][j].color.setHex(0xffffff);
                 boxesParticles[i][j].positionInBoardBox = box.randomPointOnSurface(6);
+
+                var num = puzzle.getNumber(row, col);
+                if (!num) {
+                    num = 9;
+                }
+
+                var index = Math.floor(Math.random() * numberGeometries[num].length);
+                boxesParticles[i][j].positionInBoardBox.x = numberGeometries[num][index].x;
+                boxesParticles[i][j].positionInBoardBox.y = numberGeometries[num][index].y;
+                boxesParticles[i][j].positionInBoardBox.z = numberGeometries[num][index].z;
+
+                boxesParticles[i][j].positionInBoardBox.x += x + 0.25;
+                boxesParticles[i][j].positionInBoardBox.y += y + 0.25;
 
                 pointsGeometry.vertices[i * NUM_OF_PARTICLES_FOR_BOX + j] = boxesParticles[i][j].position;  
                 pointsGeometry.colors[i * NUM_OF_PARTICLES_FOR_BOX + j] = boxesParticles[i][j].color;
@@ -281,8 +294,8 @@ app.SudokuBoard = function(puzzle) {
             if (j == i) {
                 continue; 
             }
+            /*
             for (var k = 0; k < NUM_OF_PARTICLES_FOR_BOX; k++) {
-                /*
                 var ax = (Math.random() - 0.5);
                 var ay = (Math.random() - 0.5);
                 var az = 0.0 * (Math.random() - 0.5);
@@ -292,8 +305,8 @@ app.SudokuBoard = function(puzzle) {
 
                 boxesParticles[j][k].setToMoveWithAcceleration(a, p, 1.0);
                 boxesParticles[j][k].update(dt);
-                */
             }
+            */
         }
 
         for (var j = 0; j < NUM_OF_PARTICLES_FOR_BOX; j++) {
