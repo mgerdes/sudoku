@@ -18,9 +18,9 @@ app.SudokuBoard = function(puzzle) {
 
     var ACTIONS_PER_SECOND = 1.0;
 
-    var NUM_OF_PARTICLES_FOR_BOARD = 30000;
+    var NUM_OF_PARTICLES_FOR_BOARD = 18000
 
-    var NUM_OF_PARTICLES_FOR_BOX = 1000;
+    var NUM_OF_PARTICLES_FOR_BOX = 350;
 
     /*
      * Init State
@@ -40,7 +40,7 @@ app.SudokuBoard = function(puzzle) {
     var boxesParticles = new Array(81);
     var boxesPoints = function() {
         var pointsGeometry = new THREE.Geometry();
-        var pointsMaterial = new THREE.PointsMaterial({size: 0.015, vertexColors: true});
+        var pointsMaterial = new THREE.PointsMaterial({size: 0.020, vertexColors: true});
 
         for (var i = 0; i < 81; i++) {
             boxesParticles[i] = [];
@@ -60,17 +60,20 @@ app.SudokuBoard = function(puzzle) {
                 boxesParticles[i][j].positionInBoardBox = box.randomPointOnSurface(6);
 
                 var num = puzzle.getNumber(row, col);
-                if (!num) {
-                    num = 9;
+                if (num) {
+                    var index = Math.floor(Math.random() * numberGeometries[num].length);
+                    boxesParticles[i][j].positionInBoardBox.x = numberGeometries[num][index].x;
+                    boxesParticles[i][j].positionInBoardBox.y = numberGeometries[num][index].y;
+                    boxesParticles[i][j].positionInBoardBox.z = numberGeometries[num][index].z;
+
+                    boxesParticles[i][j].positionInBoardBox.x += x + 0.25;
+                    boxesParticles[i][j].positionInBoardBox.y += y + 0.25;
                 }
-
-                var index = Math.floor(Math.random() * numberGeometries[num].length);
-                boxesParticles[i][j].positionInBoardBox.x = numberGeometries[num][index].x;
-                boxesParticles[i][j].positionInBoardBox.y = numberGeometries[num][index].y;
-                boxesParticles[i][j].positionInBoardBox.z = numberGeometries[num][index].z;
-
-                boxesParticles[i][j].positionInBoardBox.x += x + 0.25;
-                boxesParticles[i][j].positionInBoardBox.y += y + 0.25;
+                if (!num) {
+                    boxesParticles[i][j].positionInBoardBox.x = 0.0;
+                    boxesParticles[i][j].positionInBoardBox.y = 0.0;
+                    boxesParticles[i][j].positionInBoardBox.z = 0.0;
+                }
 
                 pointsGeometry.vertices[i * NUM_OF_PARTICLES_FOR_BOX + j] = boxesParticles[i][j].position;  
                 pointsGeometry.colors[i * NUM_OF_PARTICLES_FOR_BOX + j] = boxesParticles[i][j].color;
@@ -259,13 +262,25 @@ app.SudokuBoard = function(puzzle) {
             var col = log[0][2];
             var i = row * 9 + col
 
+            var x = -5 + col * 10.0 / 9.0; 
+            var y = 3.9 - row * 10.0 / 9.0;
+
             for (var j = 0; j < NUM_OF_PARTICLES_FOR_BOX; j++) {
                 var ax = (Math.random() - 0.5);
                 var ay = (Math.random() - 0.5);
                 var az = 0.0 * (Math.random() - 0.5);
 
                 var a = new THREE.Vector3(ax, ay, az);
-                var p = boxesParticles[i][j].positionInBoardBox;
+
+                var pIndex = Math.floor(Math.random() * numberGeometries[log[0][3]].length);
+                var p = new THREE.Vector3();
+                p.x = numberGeometries[log[0][3]][pIndex].x + x + 0.25;
+                p.y = numberGeometries[log[0][3]][pIndex].y + y + 0.25;
+                p.z = numberGeometries[log[0][3]][pIndex].z; 
+
+                boxesParticles[i][j].positionInBoardBox.x = p.x;
+                boxesParticles[i][j].positionInBoardBox.y = p.y;
+                boxesParticles[i][j].positionInBoardBox.z = p.z;
 
                 boxesParticles[i][j].setToMoveWithAcceleration(a, p, 1.0 / (1.0 * ACTIONS_PER_SECOND));
             }
@@ -294,7 +309,6 @@ app.SudokuBoard = function(puzzle) {
             if (j == i) {
                 continue; 
             }
-            /*
             for (var k = 0; k < NUM_OF_PARTICLES_FOR_BOX; k++) {
                 var ax = (Math.random() - 0.5);
                 var ay = (Math.random() - 0.5);
@@ -303,10 +317,9 @@ app.SudokuBoard = function(puzzle) {
                 var a = new THREE.Vector3(ax, ay, az);
                 var p = boxesParticles[j][k].positionInBoardBox;
 
-                boxesParticles[j][k].setToMoveWithAcceleration(a, p, 1.0);
+                boxesParticles[j][k].setToMoveWithAcceleration(a, p, 0.5);
                 boxesParticles[j][k].update(dt);
             }
-            */
         }
 
         for (var j = 0; j < NUM_OF_PARTICLES_FOR_BOX; j++) {
@@ -325,6 +338,12 @@ app.SudokuBoard = function(puzzle) {
 
             var i = log[logStep][1] * 9 + log[logStep][2];
 
+            var row = Math.floor(i / 9);
+            var col = Math.floor(i % 9); 
+
+            var x = -5 + col * 10.0 / 9.0; 
+            var y = 3.9 - row * 10.0 / 9.0;
+
             for (var j = 0; j < NUM_OF_PARTICLES_FOR_BOX; j++) {
                 if (log[logStep][0] == 0) {
                     var ax = (Math.random() - 0.5);
@@ -332,7 +351,16 @@ app.SudokuBoard = function(puzzle) {
                     var az = 0.0 * (Math.random() - 0.5);
 
                     var a = new THREE.Vector3(ax, ay, az);
-                    var p = boxesParticles[i][j].positionInBoardBox;
+
+                    var pIndex = Math.floor(Math.random() * numberGeometries[log[logStep][3]].length);
+                    var p = new THREE.Vector3();
+                    p.x = numberGeometries[log[logStep][3]][pIndex].x + x + 0.25;
+                    p.y = numberGeometries[log[logStep][3]][pIndex].y + y + 0.25;
+                    p.z = numberGeometries[log[logStep][3]][pIndex].z; 
+
+                    boxesParticles[i][j].positionInBoardBox.x = p.x;
+                    boxesParticles[i][j].positionInBoardBox.y = p.y;
+                    boxesParticles[i][j].positionInBoardBox.z = p.z;
 
                     boxesParticles[i][j].setToMoveWithAcceleration(a, p, 1.0 / (1.0 * ACTIONS_PER_SECOND));
                 }
@@ -343,6 +371,10 @@ app.SudokuBoard = function(puzzle) {
 
                     var a = new THREE.Vector3(ax, ay, az);
                     var p = new THREE.Vector3(0.0, 0.0, 0.0);
+
+                    boxesParticles[i][j].positionInBoardBox.x = 0.0;
+                    boxesParticles[i][j].positionInBoardBox.y = 0.0;
+                    boxesParticles[i][j].positionInBoardBox.z = 0.0;
 
                     boxesParticles[i][j].setToMoveWithAcceleration(a, p, 1.0 / (1.0 * ACTIONS_PER_SECOND));
                 }
