@@ -12,7 +12,7 @@ app.Particle = function(position, color, i) {
     this.t = 0;
     this.timeToFinish = 0;
     this.state = 0;
-    this.finalPos = new THREE.Vector3(0, 0, 0);
+    this.targetPosition = position.clone();
 };
 
 app.Particle.prototype.setToMoveWithAcceleration = function(a, p, t) {
@@ -20,9 +20,9 @@ app.Particle.prototype.setToMoveWithAcceleration = function(a, p, t) {
     this.p0.y = this.position.y;
     this.p0.z = this.position.z;
 
-    this.finalPos.x = p.x;
-    this.finalPos.y = p.y;
-    this.finalPos.z = p.z;
+    this.targetPosition.x = p.x;
+    this.targetPosition.y = p.y;
+    this.targetPosition.z = p.z;
 
     this.v0.x = (p.x - this.position.x - (1/2)*a.x*t*t) / t;
     this.v0.y = (p.y - this.position.y - (1/2)*a.y*t*t) / t;
@@ -36,14 +36,56 @@ app.Particle.prototype.setToMoveWithAcceleration = function(a, p, t) {
     this.t = 0;
 };
 
+app.Particle.prototype.setToMoveWithRandomAcceleration = function(magnitude, p, t) {
+    var angle = 2.0 * Math.random() * Math.PI;
+    var ax = magnitude * Math.random() * Math.cos(angle); 
+    var ay = magnitude * Math.random() * Math.sin(angle); 
+    var az = magnitude * Math.random(); 
+
+    this.p0.x = this.position.x;
+    this.p0.y = this.position.y;
+    this.p0.z = this.position.z;
+
+    this.targetPosition.x = p.x;
+    this.targetPosition.y = p.y;
+    this.targetPosition.z = p.z;
+
+    this.v0.x = (p.x - this.position.x - (1/2)*ax*t*t) / t;
+    this.v0.y = (p.y - this.position.y - (1/2)*ay*t*t) / t;
+    this.v0.z = (p.z - this.position.z - (1/2)*az*t*t) / t;
+
+    this.a0.x = ax;
+    this.a0.y = ay;
+    this.a0.z = az;
+
+    this.timeToFinish = t;
+    this.t = 0;
+};
+
+app.Particle.prototype.setToWiggle = function() {
+    var ax = (Math.random() - 0.5);
+    var ay = (Math.random() - 0.5);
+    var az = (Math.random() - 0.5);
+
+    var a = new THREE.Vector3(ax, ay, az);
+    var p = this.targetPosition;
+
+    this.setToMoveWithAcceleration(a, p, 1.0);
+};
+
+app.Particle.prototype.setToMoveSlowlyTowardsTarget = function() {
+    // A hack to keep velocity going smaller and smaller
+    this.setToMoveWithVelocity(this.getCurrentVelocity(), this.targetPosition, 1.0);
+};
+
 app.Particle.prototype.setToMoveWithVelocity = function(v, p, t) {
     this.p0.x = this.position.x;
     this.p0.y = this.position.y;
     this.p0.z = this.position.z;
 
-    this.finalPos.x = p.x;
-    this.finalPos.y = p.y;
-    this.finalPos.z = p.z;
+    this.targetPosition.x = p.x;
+    this.targetPosition.y = p.y;
+    this.targetPosition.z = p.z;
 
     this.v0.x = v.x;
     this.v0.y = v.y;
@@ -88,10 +130,12 @@ app.Particle.prototype.updateColor = function() {
     if (this.timeToFinish == 0) {
         return; 
     }
-    var c = this.startColor.clone().lerp(this.endColor, this.t / this.timeToFinish);
-    this.color.r = c.r;
-    this.color.g = c.g;
-    this.color.b = c.b;
+
+    var alpha = this.t / this.TimeToFinish;
+
+    this.color.r = this.startColor.r * alpha + (1.0 - alpha) * this.endColor.r;
+    this.color.g = this.startColor.g * alpha + (1.0 - alpha) * this.endColor.g;
+    this.color.b = this.startColor.b * alpha + (1.0 - alpha) * this.endColor.b;
 };
 
 app.Particle.prototype.update = function(dt) {
