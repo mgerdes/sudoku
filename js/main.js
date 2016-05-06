@@ -16,53 +16,14 @@ app.initScene = function() {
     app.scene = new THREE.Scene();
 };
 
-app.initSudokuBoard = function(puzzle) {
+app.initSudokuBoard = function() {
+    var puzzle = app.createPuzzle();
     app.sudokuBoard = new app.SudokuBoard(puzzle);
     app.scene.add(app.sudokuBoard.object);
 };
 
 app.createPuzzle = function() {
     var puzzle = new app.SudokuPuzzle(); 
-
-    puzzle.makeMove(0,0,5);
-    puzzle.makeMove(0,1,3);
-    puzzle.makeMove(0,4,7);
-
-    puzzle.makeMove(1,0,6);
-    puzzle.makeMove(1,3,1);
-    puzzle.makeMove(1,4,9);
-    puzzle.makeMove(1,5,5);
-
-    puzzle.makeMove(2,1,9);
-    puzzle.makeMove(2,2,8);
-    puzzle.makeMove(2,7,6);
-
-    puzzle.makeMove(3,0,8);
-    puzzle.makeMove(3,4,6);
-    puzzle.makeMove(3,8,3);
-
-    puzzle.makeMove(4,0,4);
-    puzzle.makeMove(4,3,8);
-    puzzle.makeMove(4,5,3);
-    puzzle.makeMove(4,8,1);
-
-    puzzle.makeMove(5,0,7);
-    puzzle.makeMove(5,4,2);
-    puzzle.makeMove(5,8,6);
-
-    puzzle.makeMove(6,1,6);
-    puzzle.makeMove(6,6,2);
-    puzzle.makeMove(6,7,8);
-
-    puzzle.makeMove(7,3,4);
-    puzzle.makeMove(7,4,1);
-    puzzle.makeMove(7,5,9);
-    puzzle.makeMove(7,8,5);
-
-    puzzle.makeMove(8,4,8);
-    puzzle.makeMove(8,7,7);
-    puzzle.makeMove(8,8,9);
-
     return puzzle;
 };
 
@@ -70,8 +31,7 @@ app.init = function() {
     app.initRenderer();
     app.initCamera();
     app.initScene();
-    var puzzle = app.createPuzzle();
-    app.initSudokuBoard(app.createPuzzle());
+    app.initSudokuBoard();
 
     document.onkeydown = function (event) {
         if (event.keyCode == 37) {

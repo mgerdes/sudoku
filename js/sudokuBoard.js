@@ -256,23 +256,36 @@ app.SudokuBoard = function(puzzle) {
         var i = log[logStep][1] * 9 + log[logStep][2];
         for (var j = 0; j < 81; j++) {
             for (var k = 0; k < NUM_OF_PARTICLES_FOR_NUMBER; k++) {
-                if (j != i) {
+                if (!isNumberMovingTowardsDest[j]) {
                     numberParticles[j][k].setToWiggle();
+                }
+                else {
+                    if (numberParticles[j][k].t > numberParticles[j][k].timeToFinish) {
+                        // Set the current steps particles to no longer be moving.
+                        isNumberMovingTowardsDest[j] = false;
+                        var p = numberParticles[j][k].targetPosition;
+                        numberParticles[j][k].position.set(p.x, p.y, p.z);
+                        numberParticles[j][k].setNotMoving();
+                    }
                 }
                 numberParticles[j][k].update(dt);
             }
         }
 
-        // Check if we should move on to the next log step.
-        if (currentTime > 1.0 / ACTIONS_PER_SECOND) {
-            // Set the current steps particles to no longer be moving.
-            isNumberMovingTowardsDest[i] = false;
-            for (var j = 0; j < NUM_OF_PARTICLES_FOR_NUMBER; j++) {
-                var p = numberParticles[i][j].targetPosition;
-                numberParticles[i][j].position.set(p.x, p.y, p.z);
-                numberParticles[i][j].setNotMoving();
-            }
+        boarderPoints.geometry.verticesNeedUpdate = true;
+        numberPoints.geometry.verticesNeedUpdate = true;
 
+        if (logStep >= log.length - 1) {
+            return;
+        }
+
+        var timeTillNextAction = 1.0 / ACTIONS_PER_SECOND;
+        if (log[logStep][0] == log[logStep+1][0]) {
+            timeTillNextAction = TIME_BETWEEN_CONSECUTIVE_ACTIONS;
+        }
+
+        if (currentTime > timeTillNextAction) {
+            console.log(logStep / log.length);
             logStep++;
             currentTime = 0;
 
@@ -293,9 +306,6 @@ app.SudokuBoard = function(puzzle) {
                 }
             }
         }
-
-        boarderPoints.geometry.verticesNeedUpdate = true;
-        numberPoints.geometry.verticesNeedUpdate = true;
     };
 
     /*
