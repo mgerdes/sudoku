@@ -24,6 +24,44 @@ app.initSudokuBoard = function() {
 
 app.createPuzzle = function() {
     var puzzle = new app.SudokuPuzzle(); 
+
+    puzzle.makeMove(0, 0, 6);
+    puzzle.makeMove(0, 4, 2);
+    puzzle.makeMove(0, 8, 9);
+
+    puzzle.makeMove(1, 1, 1);
+    puzzle.makeMove(1, 3, 3);
+    puzzle.makeMove(1, 5, 7);
+    puzzle.makeMove(1, 7, 5);
+
+    puzzle.makeMove(2, 2, 3);
+    puzzle.makeMove(2, 6, 1);
+
+    puzzle.makeMove(3, 1, 9);
+    puzzle.makeMove(3, 7, 2);
+
+    puzzle.makeMove(4, 0, 2);
+    puzzle.makeMove(4, 3, 8);
+    puzzle.makeMove(4, 4, 7);
+    puzzle.makeMove(4, 5, 5);
+    puzzle.makeMove(4, 8, 3);
+
+    puzzle.makeMove(5, 2, 5);
+    puzzle.makeMove(5, 4, 1);
+    puzzle.makeMove(5, 6, 4);
+
+    puzzle.makeMove(6, 1, 7);
+    puzzle.makeMove(6, 4, 8);
+    puzzle.makeMove(6, 7, 9);
+
+    puzzle.makeMove(7, 2, 1);
+    puzzle.makeMove(7, 4, 4);
+    puzzle.makeMove(7, 6, 8);
+
+    puzzle.makeMove(8, 3, 2);
+    puzzle.makeMove(8, 4, 5);
+    puzzle.makeMove(8, 5, 9);
+
     return puzzle;
 };
 
